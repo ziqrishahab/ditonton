@@ -16,35 +16,29 @@ class HttpSSLPinning {
   }
 
   /// Creates an HTTP client with SSL pinning enabled
-  /// Loads the pinned certificates from assets and validates against them
-  /// Uses both leaf certificate and root CA for reliable pinning
+  /// Loads the pinned certificate from assets and validates against it
   static Future<http.Client> createLEClient() async {
-    // Load the pinned certificates from assets
-    // Leaf certificate for themoviedb.org
-    final leafCert = await rootBundle.load('assets/certificates/themoviedb.pem');
-    // Amazon Root CA for certificate chain validation
-    final rootCert = await rootBundle.load('assets/certificates/amazon_root_ca.pem');
-    
-    // Create a SecurityContext WITHOUT system trusted roots
-    // This ensures ONLY our pinned certificates are trusted
-    SecurityContext securityContext = SecurityContext(withTrustedRoots: false);
-    
-    // Add both certificates to trusted store
-    securityContext.setTrustedCertificatesBytes(leafCert.buffer.asUint8List());
-    securityContext.setTrustedCertificatesBytes(rootCert.buffer.asUint8List());
+    // Load the pinned certificate from assets
+    final sslCert = await rootBundle.load('assets/certificates/themoviedb.pem');
 
-    // Create HttpClient with the pinned certificates
+    // Create a SecurityContext WITHOUT system trusted roots
+    // This ensures ONLY our pinned certificate is trusted
+    SecurityContext securityContext = SecurityContext(withTrustedRoots: false);
+
+    // Set the trusted certificate - ONLY this certificate will be accepted
+    securityContext.setTrustedCertificatesBytes(sslCert.buffer.asUint8List());
+
+    // Create HttpClient with the pinned certificate
     HttpClient httpClient = HttpClient(context: securityContext);
-    
-    // Strict certificate validation - reject any certificate not in our trusted store
-    // This is the core of SSL pinning: if the server presents a certificate
-    // that doesn't chain to our pinned certificates, the connection FAILS
+
+    // Strict certificate validation - reject any certificate not matching our pinned cert
+    // This is the core of SSL pinning: if the server presents a different certificate,
+    // the connection will FAIL
     httpClient.badCertificateCallback =
         (X509Certificate cert, String host, int port) {
-      // Always return false - never accept bad certificates
-      // A "bad certificate" here means one not validated by our pinned certs
-      return false;
-    };
+          // Always return false - never accept bad certificates
+          return false;
+        };
 
     return IOClient(httpClient);
   }

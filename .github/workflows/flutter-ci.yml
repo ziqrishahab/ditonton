@@ -23,22 +23,11 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
     
-    - name: Check formatting
-      run: dart format --set-exit-if-changed .
-      continue-on-error: true
-    
     - name: Analyze code
-      run: flutter analyze
-      continue-on-error: true
+      run: flutter analyze --no-fatal-warnings
     
     - name: Run tests
-      run: flutter test --coverage
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: coverage/lcov.info
-        fail_ci_if_error: false
+      run: flutter test
 
   build-android:
     runs-on: ubuntu-latest

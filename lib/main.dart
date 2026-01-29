@@ -35,9 +35,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ditonton/injection.dart' as di;
 
-/// Flag to track if Firebase was initialized successfully
-bool _firebaseInitialized = false;
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -46,7 +43,6 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    _firebaseInitialized = true;
 
     // Enable Firebase Analytics
     await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
